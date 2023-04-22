@@ -5,8 +5,8 @@
 %%
 "//".* /* Коммент */
 
-[a-z]+ {return IDENT;} /* <Сonst> */
-[0-9]+	{ yylval = atoi(yytext); return NUMBER; } /* <Цифра> */
+[a-z]+ {return IDENT;} /* <Идент> */
+[0-9]+	{ yylval = atoi(yytext); return CONST; } /* <Сonst> */
 not|- {return UNARY;} /* <Ун.оп.> */
 
 

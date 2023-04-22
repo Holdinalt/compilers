@@ -4,12 +4,12 @@ void main();
 %}
 
 
-%token NUMBER
+%token CONST
 %token IDENT
 
 %%
 
-term: NUMBER
+term: CONST
 | UNARY term {$$ = - $2}
 
 %%
