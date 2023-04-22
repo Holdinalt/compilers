@@ -108,7 +108,7 @@
 > &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;*=> &nbsp; <Идент> =  <Подвыражение> <Бин.оп.> <Подвыражение>*\
 > &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;*=> &nbsp;<Идент> = <Операнд> <Бин.оп.> ( <Выражение> )*\
 > &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;*=> &nbsp;<Идент> = <Операнд> <Бин.оп.> ( <Ун.оп.> <Операнд> )*\
-> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;*=> &nbsp;<Идент> = <Идент> <Бин.оп.> ( <Ун.оп.> <Const> )*\
+> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;*=> &nbsp;<Идент> = <Идент> <Бин.оп.> ( <Ун.оп.> \<Const> )*\
 > End
 
 ### Некорректная
