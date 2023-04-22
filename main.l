@@ -3,6 +3,7 @@
 %}
 
 %%
+"//".* /* Коммент */
 
 [a-z]+ {return IDENT;} /* <Сonst> */
 [0-9]+	{ yylval = atoi(yytext); return NUMBER; } /* <Цифра> */
