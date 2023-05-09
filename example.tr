@@ -5,24 +5,18 @@ program
     a
     ab
   Calculations
-    operator
-      =
+    =
+      i
+      -
+        n: 12
+    while
+      <
         i
-        -
-          n: 12
-      operator
-        complex
-          while
-            <
-              i
-              n: 10
-            complex
-              comp
-                operator
-                  =
-                    i
-                    -
-                      i
-                      ()
-                        not
-                          n: 1
+        n: 10
+      composed
+        =
+          i
+          -
+            i
+            not
+              n: 1

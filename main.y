@@ -81,17 +81,17 @@ var_list: IDENT {$$ = new_tree_node($1, NULL, NULL);}
                                 $$->next = $3;};
 
 calculation_disc: operators_list {$$=new_tree_node("Calculations", $1, NULL);};
-operators_list: operator {$$=new_tree_node("operator", $1, NULL);}
-            | operator operators_list {$$=new_tree_node("operator", $1, NULL);
-                                        $$->child->next = $2;};
+operators_list: operator {$$=$1;}
+            | operator operators_list {$$=$1;
+                                        $$->next = $2;};
 operator: assignment {$$=new_tree_node("=", $1, NULL);}
-        | complex_op {$$=new_tree_node("complex", $1, NULL);};
+        | complex_op {$$=$1;};
 
 assignment: IDENT '=' expression {$$=new_tree_node($1, NULL, $3);};
 expression: UNARY unexpression {$$=new_tree_node("not", $2, NULL);}
         | '-' unexpression {$$=new_tree_node("-", $2, NULL);}
         | unexpression {$$=$1;};
-unexpression: '(' expression ')' {$$=new_tree_node("()", $2, NULL);}
+unexpression: '(' expression ')' {$$=$2;}
         | operand {$$=$1;}
         | unexpression bin_op unexpression {$$=$2;
                                             $$->child = $1;
@@ -107,7 +107,7 @@ operand: IDENT {$$ = new_tree_node($1, NULL, NULL);}
         | CONST {$$ = new_tree_node_int($1, NULL, NULL);};
 
 complex_op: cycle_op {$$=$1;}
-        | compose_op {$$=new_tree_node("comp", $1, NULL);};
+        | compose_op {$$=new_tree_node("composed", $1, NULL);};
 cycle_op: WHILE expression DO operator {$$=new_tree_node("while", $2, NULL);
                                         $$->child->next = $4;};
 compose_op: BEGIN_T operators_list END {$$=$2;};
