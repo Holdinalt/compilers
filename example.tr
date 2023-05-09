@@ -1,0 +1,28 @@
+program
+  vars
+    i
+    io
+    a
+    ab
+  Calculations
+    Calculations
+      =
+        i
+        -
+          n: 12
+      operator
+        complex
+          while
+            <
+              i
+              n: 10
+            complex
+              comp
+                operator
+                  =
+                    i
+                    -
+                      i
+                      ()
+                        not
+                          n: 1
