@@ -40,16 +40,16 @@ struct tree *new_tree_node_int (int num, struct tree *child, struct tree *next)
     return node;
 }
 
-static void print_tree(struct tree *cur, int lvl) {
-    for(int i = 0; i < lvl; i++) printf("  ");
+static void print_tree(struct tree *cur, int lvl, FILE* fl) {
+    for(int i = 0; i < lvl; i++) fprintf(fl, "  ");
     if (cur->text)
-        printf("%s\n", cur->text);
+        fprintf(fl, "%s\n", cur->text);
     else
-        printf("num: %d\n", cur->num);
+        fprintf(fl, "n: %d\n", cur->num);
     if (cur->child != NULL)
-      print_tree(cur->child, lvl + 1);
+      print_tree(cur->child, lvl + 1, fl);
     if (cur->next != NULL)
-      print_tree(cur->next, lvl);
+      print_tree(cur->next, lvl, fl);
 }
 
 void main();
@@ -71,7 +71,9 @@ void main();
 
 program: vars calculation_disc ';' {$$ = new_tree_node("program", $1, NULL);
                                 $$->child->next = $2;
-                                print_tree($$, 0);};
+                                FILE* fl = fopen("tree.tr", "w");
+                                print_tree($$, 0, fl);
+                                fclose(fl);};
 
 vars: VAR var_list {$$ = new_tree_node("vars", $2, NULL);};
 var_list: IDENT {$$ = new_tree_node($1, NULL, NULL);}
