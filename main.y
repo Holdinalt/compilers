@@ -41,7 +41,7 @@ struct tree *new_tree_node_int (int num, struct tree *child, struct tree *next)
 }
 
 static void print_tree(struct tree *cur, int lvl) {
-    for(int i = 0; i < lvl; i++) printf("    ");
+    for(int i = 0; i < lvl; i++) printf("  ");
     if (cur->text)
         printf("%s\n", cur->text);
     else
@@ -105,7 +105,7 @@ operand: IDENT {$$ = new_tree_node($1, NULL, NULL);}
         | CONST {$$ = new_tree_node_int($1, NULL, NULL);};
 
 complex_op: cycle_op {$$=$1;}
-        | compose_op {$$=new_tree_node("bl", $1, NULL);};
+        | compose_op {$$=new_tree_node("comp", $1, NULL);};
 cycle_op: WHILE expression DO operator {$$=new_tree_node("while", $2, NULL);
                                         $$->child->next = $4;};
 compose_op: BEGIN_T operators_list END {$$=$2;};
