@@ -82,7 +82,7 @@ var_list: IDENT {$$ = new_tree_node($1, NULL, NULL);}
 
 calculation_disc: operators_list {$$=new_tree_node("Calculations", $1, NULL);};
 operators_list: operator {$$=new_tree_node("operator", $1, NULL);}
-            | operator operators_list {$$=new_tree_node("Calculations", $1, NULL);
+            | operator operators_list {$$=new_tree_node("operator", $1, NULL);
                                         $$->child->next = $2;};
 operator: assignment {$$=new_tree_node("=", $1, NULL);}
         | complex_op {$$=new_tree_node("complex", $1, NULL);};
