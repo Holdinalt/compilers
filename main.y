@@ -69,13 +69,19 @@ void main();
 %type<node> expression unexpression bin_op operand complex_op cycle_op compose_op
 %%
 
-program: vars calculation_disc ';' {$$ = new_tree_node("program", $1, NULL);
+program: vars calculation_disc ';' {$$ = new_tree_node("program", new_tree_node("vars", $1, NULL), NULL);
                                 $$->child->next = $2;
                                 FILE* fl = fopen("tree.tr", "w");
                                 print_tree($$, 0, fl);
                                 fclose(fl);};
 
-vars: VAR var_list {$$ = new_tree_node("vars", $2, NULL);};
+vars: VAR var_list {$$ = $2;}
+    | VAR var_list vars {$$ = $2;
+                        struct tree* cur = $2;
+                        while (cur->next != NULL)
+                            cur = cur->next;
+                        cur->next = $3;}
+
 var_list: IDENT {$$ = new_tree_node($1, NULL, NULL);}
         | IDENT ',' var_list {$$ = new_tree_node($1, NULL, NULL);
                                 $$->next = $3;};
