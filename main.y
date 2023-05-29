@@ -1,6 +1,8 @@
 %{
 # include <stdio.h>
 # include <stdlib.h>
+# include <stdbool.h>
+# include <string.h>
 
 #define YYERROR_VERBOSE 1
 
@@ -52,6 +54,32 @@ static void print_tree(struct tree *cur, int lvl, FILE* fl) {
       print_tree(cur->next, lvl, fl);
 }
 
+static void tree_to_asm(struct tree *cur, int lvl, FILE* fl, bool is_var) {
+    if (cur->text == NULL)
+        fprintf(fl, "\n");
+    else if (strcmp(cur->text, "program") == 0)
+        fprintf(fl, "jal x1, MAIN\n");
+    else if (is_var)
+        fprintf(fl, "%s:\ndata 0 * 1\n", cur->text);
+    else if (strcmp(cur->text, "Calculations") == 0)
+        fprintf(fl, "MAIN:\n");
+
+    if (cur->text != NULL && strcmp(cur->text, "vars") == 0)
+    {
+        if (cur->child != NULL)
+            tree_to_asm(cur->child, lvl + 1, fl, 1);
+        if (cur->next != NULL)
+            tree_to_asm(cur->next, lvl, fl, 0);
+    }
+    else
+    {
+        if (cur->child != NULL)
+            tree_to_asm(cur->child, lvl + 1, fl, is_var);
+        if (cur->next != NULL)
+            tree_to_asm(cur->next, lvl, fl, is_var);
+    }
+}
+
 void main();
 %}
 
@@ -72,8 +100,11 @@ void main();
 program: vars calculation_disc ';' {$$ = new_tree_node("program", new_tree_node("vars", $1, NULL), NULL);
                                 $$->child->next = $2;
                                 FILE* fl = fopen("tree.tr", "w");
+                                FILE* fl2 = fopen("code.s", "w");
                                 print_tree($$, 0, fl);
-                                fclose(fl);};
+                                tree_to_asm($$, 0, fl2, 0);
+                                fclose(fl);
+                                fclose(fl2);};
 
 vars: VAR var_list {$$ = $2;}
     | VAR var_list vars {$$ = $2;

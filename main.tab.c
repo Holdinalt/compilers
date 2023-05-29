@@ -66,10 +66,12 @@
 
 
 /* First part of user prologue.  */
-#line 1 "main.y"
+#line 1 "./main.y"
 
 # include <stdio.h>
 # include <stdlib.h>
+# include <stdbool.h>
+# include <string.h>
 
 #define YYERROR_VERBOSE 1
 
@@ -121,9 +123,35 @@ static void print_tree(struct tree *cur, int lvl, FILE* fl) {
       print_tree(cur->next, lvl, fl);
 }
 
+static void tree_to_asm(struct tree *cur, int lvl, FILE* fl, bool is_var) {
+    if (cur->text == NULL)
+        fprintf(fl, "\n");
+    else if (strcmp(cur->text, "program") == 0)
+        fprintf(fl, "jal x1, MAIN\n");
+    else if (is_var)
+        fprintf(fl, "%s:\ndata 0 * 1\n", cur->text);
+    else if (strcmp(cur->text, "Calculations") == 0)
+        fprintf(fl, "MAIN:\n");
+
+    if (cur->text != NULL && strcmp(cur->text, "vars") == 0)
+    {
+        if (cur->child != NULL)
+            tree_to_asm(cur->child, lvl + 1, fl, 1);
+        if (cur->next != NULL)
+            tree_to_asm(cur->next, lvl, fl, 0);
+    }
+    else
+    {
+        if (cur->child != NULL)
+            tree_to_asm(cur->child, lvl + 1, fl, is_var);
+        if (cur->next != NULL)
+            tree_to_asm(cur->next, lvl, fl, is_var);
+    }
+}
+
 void main();
 
-#line 127 "main.tab.c"
+#line 155 "main.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -187,13 +215,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 59 "main.y"
+#line 87 "./main.y"
 
    struct tree *node;
    char *text;
    int num;
 
-#line 197 "main.tab.c"
+#line 225 "main.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -567,12 +595,12 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_int8 yyrline[] =
+static const yytype_uint8 yyrline[] =
 {
-       0,    72,    72,    78,    79,    84,    85,    88,    89,    90,
-      92,    93,    95,    96,    97,    98,    99,   100,   101,   104,
-     105,   106,   107,   108,   109,   110,   111,   112,   114,   115,
-     116,   118
+       0,   100,   100,   109,   110,   116,   117,   120,   121,   122,
+     124,   125,   127,   128,   129,   130,   131,   132,   133,   136,
+     137,   138,   139,   140,   141,   142,   143,   144,   146,   147,
+     148,   150
 };
 #endif
 
@@ -1389,200 +1417,203 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 72 "main.y"
+#line 100 "./main.y"
                                    {(yyval.node) = new_tree_node("program", new_tree_node("vars", (yyvsp[-2].node), NULL), NULL);
                                 (yyval.node)->child->next = (yyvsp[-1].node);
                                 FILE* fl = fopen("tree.tr", "w");
+                                FILE* fl2 = fopen("code.s", "w");
                                 print_tree((yyval.node), 0, fl);
-                                fclose(fl);}
-#line 1399 "main.tab.c"
+                                tree_to_asm((yyval.node), 0, fl2, 0);
+                                fclose(fl);
+                                fclose(fl2);}
+#line 1430 "main.tab.c"
     break;
 
   case 3:
-#line 78 "main.y"
+#line 109 "./main.y"
                    {(yyval.node) = (yyvsp[0].node);}
-#line 1405 "main.tab.c"
+#line 1436 "main.tab.c"
     break;
 
   case 4:
-#line 79 "main.y"
+#line 110 "./main.y"
                         {(yyval.node) = (yyvsp[-1].node);
                         struct tree* cur = (yyvsp[-1].node);
-                        while (cur->next != 0)
+                        while (cur->next != NULL)
                             cur = cur->next;
                         cur->next = (yyvsp[0].node);}
-#line 1415 "main.tab.c"
+#line 1446 "main.tab.c"
     break;
 
   case 5:
-#line 84 "main.y"
+#line 116 "./main.y"
                 {(yyval.node) = new_tree_node((yyvsp[0].text), NULL, NULL);}
-#line 1421 "main.tab.c"
+#line 1452 "main.tab.c"
     break;
 
   case 6:
-#line 85 "main.y"
+#line 117 "./main.y"
                              {(yyval.node) = new_tree_node((yyvsp[-2].text), NULL, NULL);
                                 (yyval.node)->next = (yyvsp[0].node);}
-#line 1428 "main.tab.c"
-    break;
-
-  case 7:
-#line 88 "main.y"
-                                 {(yyval.node)=new_tree_node("Calculations", (yyvsp[0].node), NULL);}
-#line 1434 "main.tab.c"
-    break;
-
-  case 8:
-#line 89 "main.y"
-                         {(yyval.node)=(yyvsp[0].node);}
-#line 1440 "main.tab.c"
-    break;
-
-  case 9:
-#line 90 "main.y"
-                                      {(yyval.node)=(yyvsp[-1].node);
-                                        (yyval.node)->next = (yyvsp[0].node);}
-#line 1447 "main.tab.c"
-    break;
-
-  case 10:
-#line 92 "main.y"
-                     {(yyval.node)=new_tree_node("=", (yyvsp[0].node), NULL);}
-#line 1453 "main.tab.c"
-    break;
-
-  case 11:
-#line 93 "main.y"
-                     {(yyval.node)=(yyvsp[0].node);}
 #line 1459 "main.tab.c"
     break;
 
-  case 12:
-#line 95 "main.y"
-                                 {(yyval.node)=new_tree_node((yyvsp[-2].text), NULL, (yyvsp[0].node));}
+  case 7:
+#line 120 "./main.y"
+                                 {(yyval.node)=new_tree_node("Calculations", (yyvsp[0].node), NULL);}
 #line 1465 "main.tab.c"
     break;
 
-  case 13:
-#line 96 "main.y"
-                               {(yyval.node)=new_tree_node("not", (yyvsp[0].node), NULL);}
+  case 8:
+#line 121 "./main.y"
+                         {(yyval.node)=(yyvsp[0].node);}
 #line 1471 "main.tab.c"
     break;
 
+  case 9:
+#line 122 "./main.y"
+                                      {(yyval.node)=(yyvsp[-1].node);
+                                        (yyval.node)->next = (yyvsp[0].node);}
+#line 1478 "main.tab.c"
+    break;
+
+  case 10:
+#line 124 "./main.y"
+                     {(yyval.node)=new_tree_node("=", (yyvsp[0].node), NULL);}
+#line 1484 "main.tab.c"
+    break;
+
+  case 11:
+#line 125 "./main.y"
+                     {(yyval.node)=(yyvsp[0].node);}
+#line 1490 "main.tab.c"
+    break;
+
+  case 12:
+#line 127 "./main.y"
+                                 {(yyval.node)=new_tree_node((yyvsp[-2].text), NULL, (yyvsp[0].node));}
+#line 1496 "main.tab.c"
+    break;
+
+  case 13:
+#line 128 "./main.y"
+                               {(yyval.node)=new_tree_node("not", (yyvsp[0].node), NULL);}
+#line 1502 "main.tab.c"
+    break;
+
   case 14:
-#line 97 "main.y"
+#line 129 "./main.y"
                            {(yyval.node)=new_tree_node("-", (yyvsp[0].node), NULL);}
-#line 1477 "main.tab.c"
+#line 1508 "main.tab.c"
     break;
 
   case 15:
-#line 98 "main.y"
+#line 130 "./main.y"
                        {(yyval.node)=(yyvsp[0].node);}
-#line 1483 "main.tab.c"
+#line 1514 "main.tab.c"
     break;
 
   case 16:
-#line 99 "main.y"
+#line 131 "./main.y"
                                  {(yyval.node)=(yyvsp[-1].node);}
-#line 1489 "main.tab.c"
+#line 1520 "main.tab.c"
     break;
 
   case 17:
-#line 100 "main.y"
+#line 132 "./main.y"
                   {(yyval.node)=(yyvsp[0].node);}
-#line 1495 "main.tab.c"
+#line 1526 "main.tab.c"
     break;
 
   case 18:
-#line 101 "main.y"
+#line 133 "./main.y"
                                            {(yyval.node)=(yyvsp[-1].node);
                                             (yyval.node)->child = (yyvsp[-2].node);
                                             (yyval.node)->child->next = (yyvsp[0].node);}
-#line 1503 "main.tab.c"
+#line 1534 "main.tab.c"
     break;
 
   case 19:
-#line 104 "main.y"
+#line 136 "./main.y"
             {(yyval.node)=new_tree_node("-", NULL, NULL);}
-#line 1509 "main.tab.c"
+#line 1540 "main.tab.c"
     break;
 
   case 20:
-#line 105 "main.y"
+#line 137 "./main.y"
           {(yyval.node)=new_tree_node("+", NULL, NULL);}
-#line 1515 "main.tab.c"
+#line 1546 "main.tab.c"
     break;
 
   case 21:
-#line 106 "main.y"
+#line 138 "./main.y"
           {(yyval.node)=new_tree_node("*", NULL, NULL);}
-#line 1521 "main.tab.c"
+#line 1552 "main.tab.c"
     break;
 
   case 22:
-#line 107 "main.y"
+#line 139 "./main.y"
           {(yyval.node)=new_tree_node("/", NULL, NULL);}
-#line 1527 "main.tab.c"
+#line 1558 "main.tab.c"
     break;
 
   case 23:
-#line 108 "main.y"
+#line 140 "./main.y"
           {(yyval.node)=new_tree_node("<", NULL, NULL);}
-#line 1533 "main.tab.c"
+#line 1564 "main.tab.c"
     break;
 
   case 24:
-#line 109 "main.y"
+#line 141 "./main.y"
           {(yyval.node)=new_tree_node(">", NULL, NULL);}
-#line 1539 "main.tab.c"
+#line 1570 "main.tab.c"
     break;
 
   case 25:
-#line 110 "main.y"
+#line 142 "./main.y"
          {(yyval.node)=new_tree_node("==", NULL, NULL);}
-#line 1545 "main.tab.c"
-    break;
-
-  case 26:
-#line 111 "main.y"
-               {(yyval.node) = new_tree_node((yyvsp[0].text), NULL, NULL);}
-#line 1551 "main.tab.c"
-    break;
-
-  case 27:
-#line 112 "main.y"
-                {(yyval.node) = new_tree_node_int((yyvsp[0].num), NULL, NULL);}
-#line 1557 "main.tab.c"
-    break;
-
-  case 28:
-#line 114 "main.y"
-                     {(yyval.node)=(yyvsp[0].node);}
-#line 1563 "main.tab.c"
-    break;
-
-  case 29:
-#line 115 "main.y"
-                     {(yyval.node)=new_tree_node("composed", (yyvsp[0].node), NULL);}
-#line 1569 "main.tab.c"
-    break;
-
-  case 30:
-#line 116 "main.y"
-                                       {(yyval.node)=new_tree_node("while", (yyvsp[-2].node), NULL);
-                                        (yyval.node)->child->next = (yyvsp[0].node);}
 #line 1576 "main.tab.c"
     break;
 
-  case 31:
-#line 118 "main.y"
-                                       {(yyval.node)=(yyvsp[-1].node);}
+  case 26:
+#line 143 "./main.y"
+               {(yyval.node) = new_tree_node((yyvsp[0].text), NULL, NULL);}
 #line 1582 "main.tab.c"
     break;
 
+  case 27:
+#line 144 "./main.y"
+                {(yyval.node) = new_tree_node_int((yyvsp[0].num), NULL, NULL);}
+#line 1588 "main.tab.c"
+    break;
 
-#line 1586 "main.tab.c"
+  case 28:
+#line 146 "./main.y"
+                     {(yyval.node)=(yyvsp[0].node);}
+#line 1594 "main.tab.c"
+    break;
+
+  case 29:
+#line 147 "./main.y"
+                     {(yyval.node)=new_tree_node("composed", (yyvsp[0].node), NULL);}
+#line 1600 "main.tab.c"
+    break;
+
+  case 30:
+#line 148 "./main.y"
+                                       {(yyval.node)=new_tree_node("while", (yyvsp[-2].node), NULL);
+                                        (yyval.node)->child->next = (yyvsp[0].node);}
+#line 1607 "main.tab.c"
+    break;
+
+  case 31:
+#line 150 "./main.y"
+                                       {(yyval.node)=(yyvsp[-1].node);}
+#line 1613 "main.tab.c"
+    break;
+
+
+#line 1617 "main.tab.c"
 
       default: break;
     }
@@ -1814,4 +1845,4 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 120 "main.y"
+#line 152 "./main.y"
