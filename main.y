@@ -188,28 +188,31 @@ static void tree_to_asm(struct tree *cur, FILE* fl) {
     else if (strcmp(cur->text, "vars") == 0)
         translate_vars(cur->child, fl, 1);
     else if (strcmp(cur->text, "composed") == 0)
+    {
         tree_to_asm(cur->child, fl);
+        tree_to_asm(cur->next, fl);
+    }
     else if (strcmp(cur->text, "while") == 0)
     {
-        int cucle = cycles_count++;
-        fprintf(fl, "START_CYCLE_%d:\n", cucle);
+        int cycle = cycles_count++;
+        fprintf(fl, "START_CYCLE_%d:\n", cycle);
         int end_ind1 = translate_expression(cur->child->child, fl, 1);
         int end_ind2 = translate_expression(cur->child->child->next, fl, end_ind1);
         if (strcmp(cur->child->text, ">") == 0)
         {
-            fprintf(fl, "blt x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
-            fprintf(fl, "beq x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+            fprintf(fl, "blt x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cycle);
+            fprintf(fl, "beq x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cycle);
         } else if (strcmp(cur->child->text, "<") == 0)
         {
-            fprintf(fl, "bge x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
-            fprintf(fl, "beq x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+            fprintf(fl, "bge x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cycle);
+            fprintf(fl, "beq x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cycle);
         } else if (strcmp(cur->child->text, "==") == 0)
         {
-            fprintf(fl, "bne x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+            fprintf(fl, "bne x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cycle);
         }
         tree_to_asm(cur->child->next, fl);
-        fprintf(fl, "jal x1, START_CYCLE_%d\n", cucle);  
-        fprintf(fl, "END_CYCLE_%d:\n", cucle);
+        fprintf(fl, "jal x1, START_CYCLE_%d\n", cycle);  
+        fprintf(fl, "END_CYCLE_%d:\n", cycle);
     }
 }
 
