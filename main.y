@@ -54,29 +54,162 @@ static void print_tree(struct tree *cur, int lvl, FILE* fl) {
       print_tree(cur->next, lvl, fl);
 }
 
-static void tree_to_asm(struct tree *cur, int lvl, FILE* fl, bool is_var) {
-    if (cur->text == NULL)
-        fprintf(fl, "\n");
-    else if (strcmp(cur->text, "program") == 0)
-        fprintf(fl, "jal x1, MAIN\n");
-    else if (is_var)
-        fprintf(fl, "%s:\ndata 0 * 1\n", cur->text);
-    else if (strcmp(cur->text, "Calculations") == 0)
-        fprintf(fl, "MAIN:\n");
+struct vars_adresses {
+    char* var;
+    int addr;
+    struct vars_adresses* next;
+};
 
-    if (cur->text != NULL && strcmp(cur->text, "vars") == 0)
+static struct vars_adresses* table = NULL;
+
+static void add_var(char* var, int adress)
+{
+    if (table == NULL)
     {
-        if (cur->child != NULL)
-            tree_to_asm(cur->child, lvl + 1, fl, 1);
-        if (cur->next != NULL)
-            tree_to_asm(cur->next, lvl, fl, 0);
+        table = malloc(sizeof(struct vars_adresses));
+        table->next = NULL;
+        table->var = var;
+        table->addr = adress;
     }
     else
     {
-        if (cur->child != NULL)
-            tree_to_asm(cur->child, lvl + 1, fl, is_var);
-        if (cur->next != NULL)
-            tree_to_asm(cur->next, lvl, fl, is_var);
+        struct vars_adresses* table_cur = table;
+        while (table_cur->next != NULL)
+            table_cur = table_cur->next;
+        table_cur->next = malloc(sizeof(struct vars_adresses));
+        table_cur->next->next = NULL;
+        table_cur->next->var = var;
+        table_cur->next->addr = adress;
+    }
+}
+
+static int get_var(char* var)
+{
+    struct vars_adresses* table_cur = table;
+    while (table_cur != NULL)
+    {
+        if (strcmp(table_cur->var, var) == 0)
+            return table_cur->addr;
+        table_cur = table_cur->next;
+    }
+    return -1;
+}
+
+static void translate_vars(struct tree *cur, FILE* fl, int num)
+{
+    fprintf(fl, "%s:\ndata 0 * 1\n", cur->text);
+    add_var(cur->text, num);
+    if (cur->next)
+        translate_vars(cur->next, fl, num + 1);
+}
+
+static int translate_expression(struct tree *cur, FILE* fl, int you_ind)
+{
+    if (cur->text == NULL)
+    {
+        fprintf(fl, "addi x%d, x0, %d\n", you_ind, cur->num);
+        return you_ind + 1;
+    }
+    else if (strcmp(cur->text, "not") == 0)
+    {
+        int end_ind = translate_expression(cur->child, fl, you_ind + 1);
+        fprintf(fl, "xori x%d, x%d, 4095\n", you_ind, you_ind + 1);
+        return end_ind;
+    }
+    else if (strcmp(cur->text, "+") == 0)
+    {
+        int end_ind1 = translate_expression(cur->child, fl, you_ind + 1);
+        int end_ind2 = translate_expression(cur->child->next, fl, end_ind1);
+        fprintf(fl, "add x%d, x%d, x%d\n", you_ind, you_ind + 1, end_ind1);
+        return end_ind2;
+    }
+    else if (strcmp(cur->text, "-") == 0)
+    {
+        if (cur->child->next == NULL)
+        {
+            int end_ind = translate_expression(cur->child, fl, you_ind + 1);
+            fprintf(fl, "sub x%d, x0, x%d\n", you_ind, you_ind + 1);
+            return end_ind;
+        }
+        else
+        {
+            int end_ind1 = translate_expression(cur->child, fl, you_ind + 1);
+            int end_ind2 = translate_expression(cur->child->next, fl, end_ind1);
+            fprintf(fl, "sub x%d, x%d, x%d\n", you_ind, you_ind + 1, end_ind1);
+            return end_ind2;
+        }
+    }
+    else if (strcmp(cur->text, "*") == 0)
+    {
+        int end_ind1 = translate_expression(cur->child, fl, you_ind + 1);
+        int end_ind2 = translate_expression(cur->child->next, fl, end_ind1);
+        fprintf(fl, "mul x%d, x%d, x%d\n", you_ind, you_ind + 1, end_ind1);
+        return end_ind2;
+    }
+    else if (strcmp(cur->text, "/") == 0)
+    {
+        int end_ind1 = translate_expression(cur->child, fl, you_ind + 1);
+        int end_ind2 = translate_expression(cur->child->next, fl, end_ind1);
+        fprintf(fl, "div x%d, x%d, x%d\n", you_ind, you_ind + 1, end_ind1);
+        return end_ind2;
+    }
+    else
+    {
+        fprintf(fl, "lw x%d, x0, %d\n", you_ind, get_var(cur->text));
+        return you_ind + 1;
+    }
+    return you_ind;
+}
+
+static int cycles_count = 0;
+
+static void tree_to_asm(struct tree *cur, FILE* fl) {
+    if (cur == NULL)
+        return;
+    if (cur->text == NULL)
+        fprintf(fl, ";strange\n");
+    else if (strcmp(cur->text, "program") == 0)
+    {
+        fprintf(fl, "jal x1, MAIN\n");
+        tree_to_asm(cur->child, fl);
+        tree_to_asm(cur->child->next, fl);
+    }
+    else if (strcmp(cur->text, "Calculations") == 0)
+    {
+        fprintf(fl, "MAIN:\n");
+        tree_to_asm(cur->child, fl);
+    }
+    else if (strcmp(cur->text, "=") == 0)
+    {
+        translate_expression(cur->child->next, fl, 1);
+        fprintf(fl, "sw x0, %d, x1\n", get_var(cur->child->text));
+        tree_to_asm(cur->next, fl);
+    }
+    else if (strcmp(cur->text, "vars") == 0)
+        translate_vars(cur->child, fl, 1);
+    else if (strcmp(cur->text, "composed") == 0)
+        tree_to_asm(cur->child, fl);
+    else if (strcmp(cur->text, "while") == 0)
+    {
+        int cucle = cycles_count++;
+        fprintf(fl, "START_CYCLE_%d:\n", cucle);
+        int end_ind1 = translate_expression(cur->child->child, fl, 1);
+        int end_ind2 = translate_expression(cur->child->child->next, fl, end_ind1);
+        if (strcmp(cur->child->text, ">") == 0)
+        {
+            fprintf(fl, "blt x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+            fprintf(fl, "beq x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+        } else if (strcmp(cur->child->text, "<") == 0)
+        {
+            fprintf(fl, "bge x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+            fprintf(fl, "beq x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+        } else if (strcmp(cur->child->text, "==") == 0)
+        {
+            fprintf(fl, "bne x%d, x%d, END_CYCLE_%d\n", 1, end_ind1, cucle);
+        }
+        tree_to_asm(cur->child->next, fl);
+        fprintf(fl, "jal x1, START_CYCLE_%d\n", cucle);  
+        fprintf(fl, "END_CYCLE_%d:\n", cucle);
     }
 }
 
@@ -102,7 +235,8 @@ program: vars calculation_disc ';' {$$ = new_tree_node("program", new_tree_node(
                                 FILE* fl = fopen("tree.tr", "w");
                                 FILE* fl2 = fopen("code.s", "w");
                                 print_tree($$, 0, fl);
-                                tree_to_asm($$, 0, fl2, 0);
+                                tree_to_asm($$, fl2);
+                                fprintf(fl2, "ebreak\n");
                                 fclose(fl);
                                 fclose(fl2);};
 
